@@ -14,6 +14,9 @@ export const initialState = {
                 {
                     src: "https://i.pinimg.com/564x/d6/52/e9/d652e967b6b2579f2b2078b5974a9f8a.jpg",
                 },
+                {
+                    src: "https://i.pinimg.com/564x/d6/52/e9/d652e967b6b2579f2b2078b5974a9f8a.jpg",
+                },
             ],
             Comments: [
                 {
