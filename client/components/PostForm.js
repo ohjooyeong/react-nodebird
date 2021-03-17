@@ -5,19 +5,20 @@ import { addPostAction } from "../reducers/post";
 
 const PostForm = () => {
     const dispatch = useDispatch();
-    const { imagePaths } = useSelector((state) => state.post);
-    const [text, setText] = useState("");
-    const imageInput = useRef();
+    const { imagePaths, addPostDone } = useSelector((state) => state.post);
+    const [text, onChangeText, setText] = useInput("");
 
-    const onChangeText = useCallback((e) => {
-        setText(e.target.value);
-    }, []);
+    useEffect(() => {
+        if (addPostDone) {
+            setText("");
+        }
+    }, [addPostDone]);
 
     const onSubmit = useCallback(() => {
-        dispatch(addPostAction);
-        setText("");
-    }, []);
+        dispatch(addPostAction(text));
+    }, [text]);
 
+    const imageInput = useRef();
     const onClickImageUpload = useCallback(() => {
         imageInput.current.click();
     }, [imageInput.current]);
