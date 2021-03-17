@@ -1,4 +1,4 @@
-import { all, delay, fork, put, takeLatest } from "@redux-saga/core/effects";
+import { all, delay, fork, put, takeLatest, throttle } from "@redux-saga/core/effects";
 import shortId from "shortid";
 
 import {
@@ -11,8 +11,32 @@ import {
     REMOVE_POST_REQUEST,
     REMOVE_POST_SUCCESS,
     REMOVE_POST_FAILURE,
+    LOAD_POSTS_REQUEST,
+    LOAD_POSTS_SUCCESS,
+    LOAD_POSTS_FAILURE,
+    generateDummyPost,
 } from "../reducers/post";
 import { ADD_POST_TO_ME, REMOVE_POST_OF_ME } from "../reducers/user";
+
+function loadPostAPI(data) {
+    return axios.get("/api/posts", data);
+}
+
+function* loadPosts(action) {
+    try {
+        // const result = yield call(addPostAPI, action.data);
+        yield delay(1000);
+        yield put({
+            type: LOAD_POSTS_SUCCESS,
+            data: generateDummyPost(10),
+        });
+    } catch (error) {
+        yield put({
+            type: LOAD_POSTS_FAILURE,
+            data: error.response.data,
+        });
+    }
+}
 
 function addPostAPI(data) {
     return axios.post("/api/post", data);
@@ -82,6 +106,10 @@ function* addComment(action) {
     }
 }
 
+function* watchLoadPost() {
+    yield takeLatest(LOAD_POSTS_REQUEST, loadPosts);
+}
+
 // take는 ~~~ 액션이 실행될때까지 기다리겠다. 라는 말
 function* watchAddPost() {
     yield takeLatest(ADD_POST_REQUEST, addPost);
@@ -96,5 +124,10 @@ function* watchAddComment() {
 }
 
 export default function* postSaga() {
-    yield all([fork(watchAddPost), fork(watchRemovePost), fork(watchAddComment)]);
+    yield all([
+        fork(watchAddPost),
+        fork(watchRemovePost),
+        fork(watchAddComment),
+        fork(watchLoadPost),
+    ]);
 }

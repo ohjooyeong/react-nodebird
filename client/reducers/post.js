@@ -3,42 +3,12 @@ import produce from "immer";
 import faker from "faker";
 
 export const initialState = {
-    mainPosts: [
-        {
-            id: 1,
-            User: {
-                id: 1,
-                nickname: "ohzz",
-            },
-            content: "첫 번째 게시글 #해시태그 #익스프레스",
-            Images: [
-                {
-                    id: shortId.generate(),
-                    src: "https://i.pinimg.com/564x/09/4c/27/094c27bb93bec23a4ce2f22fd5c0758e.jpg",
-                },
-                {
-                    id: shortId.generate(),
-                    src: "https://i.pinimg.com/564x/d6/52/e9/d652e967b6b2579f2b2078b5974a9f8a.jpg",
-                },
-                {
-                    id: shortId.generate(),
-                    src: "https://i.pinimg.com/564x/d6/52/e9/d652e967b6b2579f2b2078b5974a9f8a.jpg",
-                },
-            ],
-            Comments: [
-                {
-                    id: shortId.generate(),
-                    User: {
-                        id: shortId.generate(),
-                        nickname: "ohoh",
-                    },
-                    content: "오우",
-                },
-            ],
-        },
-    ],
+    mainPosts: [],
     imagePaths: [],
-    postAdded: false,
+    hasMorePosts: true,
+    loadPostsLoading: false,
+    loadPostsDone: false,
+    loadPostsError: null,
     addPostLoading: false,
     addPostDone: false,
     addPostError: null,
@@ -50,8 +20,8 @@ export const initialState = {
     addCommentError: null,
 };
 
-initialState.mainPosts = initialState.mainPosts.concat(
-    Array(20)
+export const generateDummyPost = (number) =>
+    Array(number)
         .fill()
         .map(() => ({
             id: shortId.generate(),
@@ -74,8 +44,11 @@ initialState.mainPosts = initialState.mainPosts.concat(
                     content: faker.lorem.sentence(),
                 },
             ],
-        }))
-);
+        }));
+
+export const LOAD_POSTS_REQUEST = "LOAD_POST_REQUEST";
+export const LOAD_POSTS_SUCCESS = "LOAD_POST_SUCCESS";
+export const LOAD_POSTS_FAILURE = "LOAD_POST_FAILURE";
 
 export const ADD_POST_REQUEST = "ADD_POST_REQUEST";
 export const ADD_POST_SUCCESS = "ADD_POST_SUCCESS";
@@ -124,6 +97,21 @@ const dummyComment = (data) => ({
 const reducer = (state = initialState, action) => {
     return produce(state, (draft) => {
         switch (action.type) {
+            case LOAD_POSTS_REQUEST:
+                draft.loadPostsLoading = true;
+                draft.loadPostsDone = false;
+                draft.loadPostsError = null;
+                break;
+            case LOAD_POSTS_SUCCESS:
+                draft.loadPostsLoading = false;
+                draft.loadPostsDone = true;
+                draft.mainPosts = action.data.concat(draft.mainPosts);
+                draft.hasMorePosts = draft.mainPosts.length < 50;
+                break;
+            case LOAD_POSTS_FAILURE:
+                draft.loadPostsLoading = false;
+                draft.loadPostsError = action.error;
+                break;
             case ADD_POST_REQUEST:
                 draft.addPostLoading = true;
                 draft.addPostDone = false;
