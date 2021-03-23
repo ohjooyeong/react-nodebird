@@ -4,6 +4,9 @@ import axios from "axios";
 // call은 동기함수 호출 promise형식이고
 // fork는 비동기함수 호출 이건 그냥 함수 형식
 import {
+    LOAD_USER_FAILURE,
+    LOAD_USER_SUCCESS,
+    LOAD_USER_REQUEST,
     FOLLOW_FAILURE,
     FOLLOW_REQUEST,
     FOLLOW_SUCCESS,
@@ -20,6 +23,26 @@ import {
     UNFOLLOW_REQUEST,
     UNFOLLOW_SUCCESS,
 } from "../reducers/user";
+
+function loadUserAPI() {
+    return axios.get("/user");
+}
+
+function* loadUser(action) {
+    try {
+        const result = yield call(loadUserAPI, action.data);
+        yield put({
+            type: LOAD_USER_SUCCESS,
+            data: result.data,
+        });
+    } catch (error) {
+        console.error(error);
+        yield put({
+            type: LOAD_USER_FAILURE,
+            error: error.response.data,
+        });
+    }
+}
 
 function logInAPI(data) {
     return axios.post("/user/login", data);
@@ -115,6 +138,9 @@ function* unfollow(action) {
         });
     }
 }
+function* watchLoadUser() {
+    yield takeLatest(LOAD_USER_REQUEST, loadUser);
+}
 
 function* watchFollow() {
     yield takeLatest(FOLLOW_REQUEST, follow);
@@ -136,6 +162,7 @@ function* watchSignUp() {
 
 export default function* userSaga() {
     yield all([
+        fork(watchLoadUser),
         fork(watchFollow),
         fork(watchUnfollow),
         fork(watchLogin),

@@ -1,7 +1,9 @@
 import produce from "immer";
-import faker from "faker";
 
 export const initialState = {
+    loadUserLoading: false, // 유저정보 가져오기 시도중
+    loadUserDone: false,
+    loadUserError: null,
     followLoading: false, // 팔로우 시도중
     followDone: false,
     followError: null,
@@ -24,6 +26,10 @@ export const initialState = {
     signUpData: {},
     loginData: {},
 };
+
+export const LOAD_USER_REQUEST = "LOAD_USER_REQUEST";
+export const LOAD_USER_SUCCESS = "LOAD_USER_SUCCESS";
+export const LOAD_USER_FAILURE = "LOAD_USER_FAILURE";
 
 export const LOG_IN_REQUEST = "LOG_IN_REQUEST";
 export const LOG_IN_SUCCESS = "LOG_IN_SUCCESS";
@@ -52,24 +58,24 @@ export const UNFOLLOW_FAILURE = "UNFOLLOW_FAILURE";
 export const ADD_POST_TO_ME = "ADD_POST_TO_ME";
 export const REMOVE_POST_OF_ME = "REMOVE_POST_OF_ME";
 
-const dummyUser = (data) => ({
-    ...data,
-    nickname: "ohzz",
-    id: 1,
-    Posts: [{ id: 1 }],
-    Followings: [
-        { nickname: "인생" },
-        { nickname: "게임" },
-        { nickname: "롤" },
-        { nickname: "개발" },
-    ],
-    Followers: [
-        { nickname: "인생" },
-        { nickname: "게임" },
-        { nickname: "롤" },
-        { nickname: "개발" },
-    ],
-});
+// const dummyUser = (data) => ({
+//     ...data,
+//     nickname: "ohzz",
+//     id: 1,
+//     Posts: [{ id: 1 }],
+//     Followings: [
+//         { nickname: "인생" },
+//         { nickname: "게임" },
+//         { nickname: "롤" },
+//         { nickname: "개발" },
+//     ],
+//     Followers: [
+//         { nickname: "인생" },
+//         { nickname: "게임" },
+//         { nickname: "롤" },
+//         { nickname: "개발" },
+//     ],
+// });
 
 export const loginRequestAction = (data) => {
     return {
@@ -87,6 +93,21 @@ export const logoutRequestAction = () => {
 const reducer = (state = initialState, action) => {
     return produce(state, (draft) => {
         switch (action.type) {
+            case LOAD_USER_REQUEST:
+                draft.loadUserLoading = true;
+                draft.loadUserDone = false;
+                draft.loadUserError = null;
+                break;
+            case LOAD_USER_SUCCESS:
+                draft.loadUserLoading = false;
+                draft.loadUserDone = true;
+                draft.me = action.data;
+                break;
+            case LOAD_USER_FAILURE:
+                draft.loadUserLoading = false;
+                draft.loadUserDone = false;
+                draft.loadUserError = action.error;
+                break;
             case FOLLOW_REQUEST:
                 draft.followLoading = true;
                 draft.followDone = false;

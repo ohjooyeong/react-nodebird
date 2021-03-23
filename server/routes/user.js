@@ -6,6 +6,44 @@ const { isLoggedIn, isNotLoggedIn } = require("./middlewares");
 
 const router = express.Router();
 
+// 로그인 정보 유지
+router.get("/", async (req, res, next) => {
+    try {
+        if (req.user) {
+            const fullUserWithoutPassword = await User.findOne({
+                where: { id: req.user.id },
+                attributes: {
+                    // password만 빼고 다 받아옴
+                    exclude: ["password"],
+                },
+                include: [
+                    // 이걸 포함해서 User 테이블을 받아옴
+                    {
+                        model: Post,
+                        attributes: ["id"],
+                    },
+                    {
+                        model: User,
+                        as: "Followings",
+                        attributes: ["id"],
+                    },
+                    {
+                        model: User,
+                        as: "Followers",
+                        attributes: ["id"],
+                    },
+                ],
+            });
+            res.status(200).json(fullUserWithoutPassword);
+        } else {
+            res.status(200).json(null);
+        }
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
 // POST /user/login
 // 미들웨어 확장방법
 router.post("/login", isNotLoggedIn, (req, res, next) => {

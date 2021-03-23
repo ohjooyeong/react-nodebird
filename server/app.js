@@ -6,12 +6,14 @@ const passport = require("passport");
 const dotenv = require("dotenv");
 const postRouter = require("./routes/post");
 const userRouter = require("./routes/user");
+const postsRouter = require("./routes/posts");
+const morgan = require("morgan");
 
 const app = express();
 const passportConfig = require("./passport");
 
-dotenv.config();
 const db = require("./models");
+dotenv.config();
 db.sequelize
     .sync()
     .then(() => {
@@ -21,10 +23,11 @@ db.sequelize
 
 passportConfig();
 
+app.use(morgan("dev"));
 app.use(
     cors({
-        origin: "*",
-        credentials: false,
+        origin: "http://localhost:3060",
+        credentials: true,
     })
 );
 app.use(express.json());
@@ -45,6 +48,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/post", postRouter);
+app.use("/posts", postsRouter);
 app.use("/user", userRouter);
 
 app.listen(3065, () => {
