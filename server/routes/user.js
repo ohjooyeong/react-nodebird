@@ -1,13 +1,15 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
-const { User } = require("../models");
+const { User, Post } = require("../models");
+const { isLoggedIn, isNotLoggedIn } = require("./middlewares");
 
 const router = express.Router();
 
 // POST /user/login
 // 미들웨어 확장방법
-router.post("/login", (req, res, next) => {
+router.post("/login", isNotLoggedIn, (req, res, next) => {
+    console.log("여기");
     passport.authenticate("local", (err, user, info) => {
         if (err) {
             console.error(err);
@@ -21,11 +23,33 @@ router.post("/login", (req, res, next) => {
                 console.error(loginErr);
                 return next(loginErr);
             }
+            const fullUserWithoutPassword = await User.findOne({
+                where: { id: user.id },
+                attributes: {
+                    // password만 빼고 다 받아옴
+                    exclude: ["password"],
+                },
+                include: [
+                    // 이걸 포함해서 User 테이블을 받아옴
+                    {
+                        model: Post,
+                    },
+                    {
+                        model: User,
+                        as: "Followings",
+                    },
+                    {
+                        model: User,
+                        as: "Followers",
+                    },
+                ],
+            });
+            return res.status(200).json(fullUserWithoutPassword);
         });
     })(req, res, next);
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", isNotLoggedIn, async (req, res, next) => {
     // POST /user
     try {
         const exUser = await User.findOne({
@@ -49,7 +73,7 @@ router.post("/", async (req, res, next) => {
     }
 });
 
-router.post("/logout", (req, res) => {
+router.post("/logout", isLoggedIn, (req, res) => {
     req.logout();
     req.session.destroy();
     res.send("ok");
