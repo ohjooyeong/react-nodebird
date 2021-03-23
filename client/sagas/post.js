@@ -35,6 +35,7 @@ function* likePost(action) {
             data: result.data,
         });
     } catch (error) {
+        console.error(error);
         yield put({
             type: LIKE_POST_FAILURE,
             data: error.response.data,
@@ -54,6 +55,7 @@ function* unlikePost(action) {
             data: result.data,
         });
     } catch (error) {
+        console.error(error);
         yield put({
             type: UNLIKE_POST_FAILURE,
             data: error.response.data,
@@ -73,6 +75,7 @@ function* loadPosts() {
             data: result.data,
         });
     } catch (error) {
+        console.error(error);
         yield put({
             type: LOAD_POSTS_FAILURE,
             data: error.response.data,
@@ -96,6 +99,7 @@ function* addPost(action) {
             data: result.data.id,
         });
     } catch (error) {
+        console.error(error);
         yield put({
             type: ADD_POST_FAILURE,
             data: error.response.data,
@@ -104,22 +108,22 @@ function* addPost(action) {
 }
 
 function removePostAPI(data) {
-    return axios.post("/api/post", data);
+    return axios.delete(`/post/${data}`);
 }
 
 function* removePost(action) {
     try {
-        // const result = yield call(removePostAPI, action.data);
-        yield delay(1000);
+        const result = yield call(removePostAPI, action.data);
         yield put({
             type: REMOVE_POST_SUCCESS,
-            data: action.data,
+            data: result.data,
         });
         yield put({
             type: REMOVE_POST_OF_ME,
             data: action.data,
         });
     } catch (error) {
+        console.error(error);
         yield put({
             type: REMOVE_POST_FAILURE,
             data: error.response.data,
