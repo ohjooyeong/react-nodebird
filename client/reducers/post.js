@@ -149,7 +149,7 @@ const reducer = (state = initialState, action) => {
                 draft.uploadImagesError = null;
                 break;
             case UPLOAD_IMAGES_SUCCESS: {
-                draft.imagePaths = action.data.concat(draft.imagePaths);
+                draft.imagePaths = draft.imagePaths.concat(action.data);
                 draft.uploadImagesLoading = false;
                 draft.uploadImagesDone = true;
                 break;
@@ -198,8 +198,8 @@ const reducer = (state = initialState, action) => {
             case LOAD_POSTS_SUCCESS:
                 draft.loadPostsLoading = false;
                 draft.loadPostsDone = true;
-                draft.mainPosts = action.data.concat(draft.mainPosts);
-                draft.hasMorePosts = draft.mainPosts.length < 50;
+                draft.mainPosts = draft.mainPosts.concat(action.data);
+                draft.hasMorePosts = action.data.length === 10;
                 break;
             case LOAD_POSTS_FAILURE:
                 draft.loadPostsLoading = false;
