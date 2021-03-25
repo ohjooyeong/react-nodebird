@@ -8,6 +8,7 @@ const postRouter = require("./routes/post");
 const userRouter = require("./routes/user");
 const postsRouter = require("./routes/posts");
 const morgan = require("morgan");
+const path = require("path");
 
 const app = express();
 const passportConfig = require("./passport");
@@ -30,6 +31,7 @@ app.use(
         credentials: true,
     })
 );
+app.use("/", express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
