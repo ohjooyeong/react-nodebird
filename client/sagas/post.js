@@ -20,16 +20,39 @@ import {
     UNLIKE_POST_REQUEST,
     UNLIKE_POST_SUCCESS,
     UNLIKE_POST_FAILURE,
+    UPLOAD_IMAGES_REQUEST,
+    UPLOAD_IMAGES_SUCCESS,
+    UPLOAD_IMAGES_FAILURE,
 } from "../reducers/post";
 import { ADD_POST_TO_ME, REMOVE_POST_OF_ME } from "../reducers/user";
 
-function likeAPI(data) {
+function uploadImagesAPI(data) {
+    return axios.post(`/post/images`, data);
+}
+
+function* uploadImages(action) {
+    try {
+        const result = yield call(uploadImagesAPI, action.data);
+        yield put({
+            type: UPLOAD_IMAGES_SUCCESS,
+            data: result.data,
+        });
+    } catch (error) {
+        console.error(error);
+        yield put({
+            type: UPLOAD_IMAGES_FAILURE,
+            data: error.response.data,
+        });
+    }
+}
+
+function likePostAPI(data) {
     return axios.patch(`/post/${data}/like`);
 }
 
 function* likePost(action) {
     try {
-        const result = yield call(likeAPI, action.data);
+        const result = yield call(likePostAPI, action.data);
         yield put({
             type: LIKE_POST_SUCCESS,
             data: result.data,
@@ -43,13 +66,13 @@ function* likePost(action) {
     }
 }
 
-function unlikeAPI(data) {
+function unlikePostAPI(data) {
     return axios.delete(`/post/${data}/unlike`);
 }
 
 function* unlikePost(action) {
     try {
-        const result = yield call(unlikeAPI, action.data);
+        const result = yield call(unlikePostAPI, action.data);
         yield put({
             type: UNLIKE_POST_SUCCESS,
             data: result.data,
@@ -151,6 +174,10 @@ function* addComment(action) {
     }
 }
 
+function* watchUploadImages() {
+    yield takeLatest(UPLOAD_IMAGES_REQUEST, uploadImages);
+}
+
 function* watchLikePost() {
     yield takeLatest(LIKE_POST_REQUEST, likePost);
 }
@@ -178,6 +205,7 @@ function* watchAddComment() {
 
 export default function* postSaga() {
     yield all([
+        fork(watchUploadImages),
         fork(watchLikePost),
         fork(watchUnlikePost),
         fork(watchAddPost),

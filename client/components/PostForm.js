@@ -2,7 +2,7 @@ import { Button, Input, Form } from "antd";
 import React, { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useInput from "../hooks/useInput";
-import { addPostAction } from "../reducers/post";
+import { addPostAction, UPLOAD_IMAGES_REQUEST } from "../reducers/post";
 
 const PostForm = () => {
     const dispatch = useDispatch();
@@ -24,6 +24,18 @@ const PostForm = () => {
         imageInput.current.click();
     }, [imageInput.current]);
 
+    const onChangeImages = useCallback((e) => {
+        console.log("images", e.target.files);
+        const imageFormData = new FormData();
+        [].forEach.call(e.target.files, (f) => {
+            imageFormData.append("image", f);
+        });
+        dispatch({
+            type: UPLOAD_IMAGES_REQUEST,
+            data: imageFormData,
+        });
+    });
+
     return (
         <Form style={{ margin: "10px 0 20px" }} encType="multipart/form-data" onFinish={onSubmit}>
             <Input.TextArea
@@ -33,7 +45,7 @@ const PostForm = () => {
                 placeholder="당신의 이야기를 보여주세요"
             />
             <div>
-                <input type="file" multiple hidden ref={imageInput} />
+                <input type="file" multiple hidden ref={imageInput} onChange={onChangeImages} />
                 <Button onClick={onClickImageUpload}>이미지 업로드</Button>
                 <Button type="primary" style={{ float: "right" }} htmlType="submit">
                     짹짹
