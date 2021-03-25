@@ -127,7 +127,7 @@ const reducer = (state = initialState, action) => {
                 draft.uploadImagesError = null;
                 break;
             case UPLOAD_IMAGES_SUCCESS: {
-                draft.imagePaths = action.data;
+                draft.imagePaths = action.data.concat(draft.imagePaths);
                 draft.uploadImagesLoading = false;
                 draft.uploadImagesDone = true;
                 break;
@@ -208,7 +208,6 @@ const reducer = (state = initialState, action) => {
                 draft.mainPosts = draft.mainPosts.filter((v) => v.id !== action.data.PostId);
                 draft.removePostDone = true;
                 break;
-
             case REMOVE_POST_FAILURE:
                 draft.removePostLoading = false;
                 draft.removePostError = action.error;
