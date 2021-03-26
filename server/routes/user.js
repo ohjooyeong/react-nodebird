@@ -8,6 +8,7 @@ const router = express.Router();
 
 // 로그인 정보 유지
 router.get("/", async (req, res, next) => {
+    console.log(req.headers);
     try {
         if (req.user) {
             const fullUserWithoutPassword = await User.findOne({
