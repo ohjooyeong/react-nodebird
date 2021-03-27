@@ -8,7 +8,6 @@ const router = express.Router();
 
 // 로그인 정보 유지
 router.get("/", async (req, res, next) => {
-    console.log(req.headers);
     try {
         if (req.user) {
             const fullUserWithoutPassword = await User.findOne({
@@ -35,9 +34,9 @@ router.get("/", async (req, res, next) => {
                     },
                 ],
             });
-            res.status(200).json(fullUserWithoutPassword);
+            return res.status(200).json(fullUserWithoutPassword);
         } else {
-            res.status(200).json(null);
+            return res.status(200).json(null);
         }
     } catch (error) {
         console.error(error);
@@ -48,7 +47,6 @@ router.get("/", async (req, res, next) => {
 // POST /user/login
 // 미들웨어 확장방법
 router.post("/login", isNotLoggedIn, (req, res, next) => {
-    console.log("여기");
     passport.authenticate("local", (err, user, info) => {
         if (err) {
             console.error(err);
@@ -139,7 +137,7 @@ router.patch("/:userId/follow", isLoggedIn, async (req, res, next) => {
     try {
         const user = await User.findOne({ where: { id: req.params.userId } });
         if (!user) {
-            return res.status(200).send("존재하지 않는 사람을 찾으려고 하시네요");
+            return res.status(403).send("존재하지 않는 사람을 찾으려고 하시네요");
         }
         await user.addFollowers(req.user.id);
         return res.status(200).json({ UserId: Number(req.params.userId) });
@@ -153,7 +151,7 @@ router.delete("/:userId/follow", isLoggedIn, async (req, res, next) => {
     try {
         const user = await User.findOne({ where: { id: req.params.userId } });
         if (!user) {
-            return res.status(200).send("존재하지 않는 사람을 찾으려고 하시네요");
+            return res.status(403).send("존재하지 않는 사람을 찾으려고 하시네요");
         }
         await user.removeFollowers(req.user.id);
         return res.status(200).json({ UserId: Number(req.params.userId) });
@@ -167,7 +165,7 @@ router.delete("/follower/:userId", isLoggedIn, async (req, res, next) => {
     try {
         const user = await User.findOne({ where: { id: req.params.userId } });
         if (!user) {
-            return res.status(200).send("없는 사람을 차단하려고 하시네요");
+            return res.status(403).send("없는 사람을 차단하려고 하시네요");
         }
         await user.removeFollowings(req.user.id);
         return res.status(200).json({ UserId: Number(req.params.userId) });
@@ -181,7 +179,7 @@ router.get("/followers", isLoggedIn, async (req, res, next) => {
     try {
         const user = await User.findOne({ where: { id: req.user.id } });
         if (!user) {
-            return res.status(200).send("존재하지 않는 사람을 찾으려고 하시네요");
+            return res.status(403).send("존재하지 않는 사람을 찾으려고 하시네요");
         }
         const followers = await user.getFollowers();
         return res.status(200).json(followers);
@@ -195,10 +193,51 @@ router.get("/followings", isLoggedIn, async (req, res, next) => {
     try {
         const user = await User.findOne({ where: { id: req.user.id } });
         if (!user) {
-            return res.status(200).send("존재하지 않는 사람을 찾으려고 하시네요");
+            return res.status(403).send("존재하지 않는 사람을 찾으려고 하시네요");
         }
         const followings = await user.getFollowings();
         return res.status(200).json(followings);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
+router.get("/:userId", async (req, res, next) => {
+    try {
+        const fullUserWithoutPassword = await User.findOne({
+            where: { id: req.params.userId },
+            attributes: {
+                // password만 빼고 다 받아옴
+                exclude: ["password"],
+            },
+            include: [
+                // 이걸 포함해서 User 테이블을 받아옴
+                {
+                    model: Post,
+                    attributes: ["id"],
+                },
+                {
+                    model: User,
+                    as: "Followings",
+                    attributes: ["id"],
+                },
+                {
+                    model: User,
+                    as: "Followers",
+                    attributes: ["id"],
+                },
+            ],
+        });
+        if (fullUserWithoutPassword) {
+            const data = fullUserWithoutPassword.toJSON();
+            data.Posts = data.Posts.length; //개인정보 침해 예방
+            data.Followers = data.Followers.length;
+            data.Followings = data.Followings.length;
+            return res.status(200).json(data);
+        } else {
+            return res.status(200).json("존재하지 않는 사용자입니다");
+        }
     } catch (error) {
         console.error(error);
         next(error);

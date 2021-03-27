@@ -1,4 +1,4 @@
-import { all, delay, fork, put, takeLatest, call } from "@redux-saga/core/effects";
+import { all, fork, put, takeLatest, call } from "@redux-saga/core/effects";
 import axios from "axios";
 
 import {
@@ -26,6 +26,9 @@ import {
     RETWEET_REQUEST,
     RETWEET_SUCCESS,
     RETWEET_FAILURE,
+    LOAD_POST_REQUEST,
+    LOAD_POST_SUCCESS,
+    LOAD_POST_FAILURE,
 } from "../reducers/post";
 import { ADD_POST_TO_ME, REMOVE_POST_OF_ME } from "../reducers/user";
 
@@ -104,6 +107,26 @@ function* unlikePost(action) {
         console.error(error);
         yield put({
             type: UNLIKE_POST_FAILURE,
+            error: error.response.data,
+        });
+    }
+}
+
+function loadPostAPI(data) {
+    return axios.get(`/post/${data}`);
+}
+
+function* loadPost(action) {
+    try {
+        const result = yield call(loadPostAPI, action.data);
+        yield put({
+            type: LOAD_POST_SUCCESS,
+            data: result.data,
+        });
+    } catch (error) {
+        console.error(error);
+        yield put({
+            type: LOAD_POST_FAILURE,
             error: error.response.data,
         });
     }
@@ -213,8 +236,12 @@ function* watchUnlikePost() {
     yield takeLatest(UNLIKE_POST_REQUEST, unlikePost);
 }
 
-function* watchLoadPost() {
+function* watchLoadPosts() {
     yield takeLatest(LOAD_POSTS_REQUEST, loadPosts);
+}
+
+function* watchLoadPost() {
+    yield takeLatest(LOAD_POST_REQUEST, loadPost);
 }
 
 // take는 ~~~ 액션이 실행될때까지 기다리겠다. 라는 말
@@ -239,6 +266,7 @@ export default function* postSaga() {
         fork(watchAddPost),
         fork(watchRemovePost),
         fork(watchAddComment),
+        fork(watchLoadPosts),
         fork(watchLoadPost),
     ]);
 }

@@ -211,6 +211,7 @@ router.patch("/:postId/like", isLoggedIn, async (req, res, next) => {
         if (!post) {
             return res.status(403).send("게시글이 존재하지 않습니다.");
         }
+        console.log(req.user.id);
         await post.addLikers(req.user.id);
         return res.status(201).json({ PostId: post.id, UserId: req.user.id });
     } catch (error) {
@@ -241,6 +242,60 @@ router.delete("/:postId", isLoggedIn, async (req, res, next) => {
         }
         await Post.destroy({ where: { id: req.params.postId, UserId: req.user.id } });
         return res.status(200).json({ PostId: Number(req.params.postId) });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
+router.get("/:postId", async (req, res) => {
+    try {
+        const post = await Post.findOne({
+            where: { id: req.params.postId },
+        });
+        if (!post) {
+            return res.status(404).send("존재하지 않는 게시글입니다.");
+        }
+        const fullPost = await Post.findOne({
+            where: { id: post.id },
+            include: [
+                {
+                    model: User,
+                    attributes: ["id", "nickname"],
+                },
+                {
+                    model: Image,
+                },
+                {
+                    model: Comment,
+                    include: [
+                        {
+                            model: User,
+                            attributes: ["id", "nickname"],
+                        },
+                    ],
+                },
+                {
+                    model: User, // 좋아요 누른 사람
+                    as: "Likers",
+                    attributes: ["id"],
+                },
+                {
+                    model: Post,
+                    as: "Retweet",
+                    include: [
+                        {
+                            model: User,
+                            attributes: ["id", "nickname"],
+                        },
+                        {
+                            model: Image,
+                        },
+                    ],
+                },
+            ],
+        });
+        res.status(200).json(fullPost);
     } catch (error) {
         console.error(error);
         next(error);
